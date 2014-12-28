@@ -35,10 +35,9 @@ function splitData(data) {
 
 function formatDate(data) {
   return data.items.map(function(el) {
-    var re = /(\d{1,2})\/(\d{1,2})\/(\d{4}) (.+?)$/i;
+    var re = /(\d{1,2})\/(\d{1,2})\/(\d{4}) (\d\d):(\d\d):(\d\d)$/i;
     var d = el.id.match(re);
-    var date = d[3] + "-" + d[2] + "-" + d[1] + " " + d[4];
-    el.id = Date.parse(date);
+    el.id = new Date(d[3],d[2],d[1],d[4],d[5],d[6])
     return el;
   })
 }
@@ -55,10 +54,6 @@ function getGraphData(data){
 function loadChart(data) {
   $('#container').highcharts({
     
-      chart: {
-        type: "area"
-      },
-
       title: {
           text: 'Feeding chart'
       },
@@ -69,29 +64,64 @@ function loadChart(data) {
 
       xAxis: {
           type: 'datetime',
-
       },
+      
+      yAxis: [{
+          title: {
+            text: "Volume in Millilitres"
+          },
+          labels: {
+              format: '{value} mls',
+              style: {
+                  color: Highcharts.getOptions().colors[0]
+              }
+          }
+      },
+      { // Secondary yAxis
+          max: 5,
+          gridLineWidth: 0,
+          title: {
+              text: 'Time in Minutes',
+              style: {
+                  color: Highcharts.getOptions().colors[0]
+              }
+          },
+          labels: {
+              format: '{value} mins',
+              style: {
+                  color: Highcharts.getOptions().colors[0]
+              }
+          },
+          opposite: true,
+          min: 0,
+          max: 50
+      }
+      ],
       
       series: [
         {
           data:  getGraphData(data.cupsma),
           name: "Cup sma",
-          type: "area"
+          type: "area",
+          yAxis: 0
         },
         {
           data: getGraphData(data.bottlesma),
           name: "Bottled sma",
-          type: "area"
+          type: "area",
+          yAxis: 0
         },
         {
           data: getGraphData(data.bottlebreast),
           name: "Bottled breast milk",
-          type: "area"
+          type: "area",
+          yAxis: 0
         },
         {
           data: getGraphData(data.breast),
           name: "Breast only",
-          type: "area"
+          type: "area",
+          yAxis: 1
         }
       ],
 
@@ -108,4 +138,4 @@ function loadChart(data) {
 
 </script>
 
-<div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+<div id="container" style="min-width: 310px; height: 500px; margin: 0 auto"></div>

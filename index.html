@@ -1,0 +1,111 @@
+<script src="https://code.jquery.com/jquery-1.7.2.min.js"></script>
+<script src="http://code.highcharts.com/highcharts.js"></script>
+<script src="http://code.highcharts.com/modules/data.js"></script>
+<script src="http://code.highcharts.com/modules/exporting.js"></script>
+<script src="js/jquery.google.spreadsheet.min.js"></script>
+
+<script type="text/javascript">
+
+var key = "15zt_jnGtUx5dogVXRt2mhzShdL3155mU1lpF5NweJfQ";
+
+var url = "https://docs.google.com/spreadsheet/pub?key=15zt_jnGtUx5dogVXRt2mhzShdL3155mU1lpF5NweJfQ&output=html";
+
+var googleSpreadsheet = new GoogleSpreadsheet();
+
+googleSpreadsheet.url(url);
+
+googleSpreadsheet.load(function(data) {
+  var formattedData = formatDate(data);
+  var chartData = splitData(formattedData);
+  loadChart(chartData);
+});
+
+function filterByType(data){
+  return data.typeoffeed == this.typeoffeed && data.typeofmilk == this.typeofmilk
+}
+
+function splitData(data) { 
+  return {
+    cupsma: data.filter(filterByType, {typeoffeed: "cup", typeofmilk: "sma"}),
+    bottlesma: data.filter(filterByType, {typeoffeed: "bottle", typeofmilk: "sma"}),
+    bottlebreast: data.filter(filterByType, {typeoffeed: "bottle", typeofmilk: "breast"}),
+    breast: data.filter(filterByType, {typeoffeed: "breast", typeofmilk: "breast"})
+  }
+}
+
+function formatDate(data) {
+  return data.items.map(function(el) {
+    var re = /(\d{1,2})\/(\d{1,2})\/(\d{4}) (.+?)$/i;
+    var d = el.id.match(re);
+    var date = d[3] + "-" + d[2] + "-" + d[1] + " " + d[4];
+    el.id = Date.parse(date);
+    return el;
+  })
+}
+
+function getGraphData(data){
+  return data.map(function(el){
+    return {
+      x: el.id,
+      y: parseInt(el.amounttaken)
+    }
+  })
+}
+
+function loadChart(data) {
+  $('#container').highcharts({
+    
+      chart: {
+        type: "area"
+      },
+
+      title: {
+          text: 'Feeding chart'
+      },
+
+      subtitle: {
+          text: 'The first weeks'
+      },
+
+      xAxis: {
+          type: 'datetime',
+
+      },
+      
+      series: [
+        {
+          data:  getGraphData(data.cupsma),
+          name: "Cup sma",
+          type: "area"
+        },
+        {
+          data: getGraphData(data.bottlesma),
+          name: "Bottled sma",
+          type: "area"
+        },
+        {
+          data: getGraphData(data.bottlebreast),
+          name: "Bottled breast milk",
+          type: "area"
+        },
+        {
+          data: getGraphData(data.breast),
+          name: "Breast only",
+          type: "area"
+        }
+      ],
+
+      plotOptions: {
+          series: {
+              marker: {
+                  enabled: false
+              }
+          }
+      }
+  });
+}
+
+
+</script>
+
+<div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>

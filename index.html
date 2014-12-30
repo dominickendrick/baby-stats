@@ -51,8 +51,26 @@ function getGraphData(data){
   })
 }
 
+function groupByDay(data){
+  var acc = {}
+  data.forEach(function(el, index, array){
+    var key = el.x.toISOString().slice(0,10)
+    if(acc.hasOwnProperty(key)) {
+      acc[key] = el.y + acc[key];
+    } else {
+      acc[key] = el.y;
+    }
+  });
+  return Object.keys(acc).map(function(key){
+    return {
+      x: new Date(key),
+      y: acc[key]
+    }
+  });
+}
+
 function loadChart(data) {
-  $('#container').highcharts({
+  $('#containerbymin').highcharts({
     
       title: {
           text: 'Feeding chart'
@@ -60,6 +78,88 @@ function loadChart(data) {
 
       subtitle: {
           text: 'The first weeks'
+      },
+
+      xAxis: {
+          type: 'datetime',
+      },
+      
+      yAxis: [{
+          title: {
+            text: "Volume in Millilitres"
+          },
+          labels: {
+              format: '{value} mls',
+              style: {
+                  color: Highcharts.getOptions().colors[0]
+              }
+          }
+      },
+      { // Secondary yAxis
+          max: 5,
+          gridLineWidth: 0,
+          title: {
+              text: 'Time in Minutes',
+              style: {
+                  color: Highcharts.getOptions().colors[0]
+              }
+          },
+          labels: {
+              format: '{value} mins',
+              style: {
+                  color: Highcharts.getOptions().colors[0]
+              }
+          },
+          opposite: true,
+          min: 0,
+          max: 50
+      }
+      ],
+      
+      series: [
+        {
+          data:  groupByDay(getGraphData(data.cupsma)),
+          name: "Cup sma",
+          type: "area",
+          yAxis: 0
+        },
+        {
+          data: groupByDay(getGraphData(data.bottlesma)),
+          name: "Bottled sma",
+          type: "area",
+          yAxis: 0
+        },
+        {
+          data: groupByDay(getGraphData(data.bottlebreast)),
+          name: "Bottled breast milk",
+          type: "area",
+          yAxis: 0
+        },
+        {
+          data: getGraphData(data.breast),
+          name: "Breast only",
+          type: "area",
+          yAxis: 1
+        }
+      ],
+
+      plotOptions: {
+          series: {
+              marker: {
+                  enabled: false
+              },
+              lineWidth: 1,
+          }
+      }
+  });
+  $('#containerbyday').highcharts({
+    
+      title: {
+          text: 'Feeding chart'
+      },
+
+      subtitle: {
+          text: 'The first weeks by day'
       },
 
       xAxis: {
@@ -139,4 +239,5 @@ function loadChart(data) {
 
 </script>
 
-<div id="container" style="min-width: 310px; height: 500px; margin: 0 auto"></div>
+<div id="containerbymin" style="min-width: 310px; height: 500px; margin: 0 auto"></div>
+<div id="containerbyday" style="min-width: 310px; height: 500px; margin: 0 auto"></div>
